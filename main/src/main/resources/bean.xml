@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+    <description>Spring QuickStart</description>
+
+    <bean id="log4jConfigurer" class="org.springframework.util.Log4jConfigurer"
+          abstract="true" factory-method="initLogging">
+        <constructor-arg index="0" value="classpath*:log4j.properties"></constructor-arg>   <!--"classpath*:log4j.properties"-->
+        <constructor-arg index="1" value="60000"></constructor-arg>
+    </bean>
+
+    <bean id="trapHandler" class="edu.xmu.hwb.filter.IoMessageHandlerAdapter" singleton="false" >
+        <property name="processes">
+            <list>
+                <ref bean= "msg0x0200" />
+            </list>
+        </property>
+    </bean>
+    <bean id="msg0x0200" class="edu.xmu.hwb.implement.Msg0x0200Process" singleton="false" >
+        <property name="storageManagerFilter" ref="storageprovide"/>
+        <property name="client" ref="apiClient"/>
+    </bean>
+    <bean id="apiClient" class="edu.xmu.hwb.implement.ApiClient" singleton="false" >
+    </bean>
+    <bean id="storageprovide" class="edu.xmu.hwb.storage.StorageManagerFilter" init-method="start">
+        <property name="taskInterval" value="60"/>
+<!--        <property name="databasePoolManager" ref="dataSource"/>-->
+        <property name="storageProvide">
+            <map>
+                <entry key="0x0200"  value-ref="store0x0200"/>
+                <entry key="0x0100"  value-ref="store0x0100"/>
+            </map>
+        </property>
+    </bean>
+    <bean id="store0x0200" class="edu.xmu.hwb.storage.AutoMsgStorage" singleton="false" >
+
+        <constructor-arg index="0" value="edu.xmu.hwb.dbstructure.GpsTrackMsgData"/>
+        <constructor-arg index="1" value="50"/>
+        <constructor-arg index="2" value="120"/>
+    </bean>
+    <bean id="store0x0100" class="edu.xmu.hwb.storage.AutoMsgStorage" singleton="false" >
+        <constructor-arg index="0" value="edu.xmu.hwb.dbstructure.RegisteredMsgData"/>
+        <constructor-arg index="1" value="1000"/>
+        <constructor-arg index="2" value="30"/>
+    </bean>
+
+
+    <bean id="loggingFilter" class="edu.xmu.hwb.filter.ReadWriteLoggingFilter" >
+        <constructor-arg index="0" value="GatewayClient"/>
+        <constructor-arg index="1" value="5000"/>
+    </bean>
+
+    <bean id="authFilter" class="edu.xmu.hwb.filter.AuthorizeFilter" >
+        <property name="authorizeProcess" ref="msg0x0100x0102"/>
+    </bean>
+    <bean id="msg0x0100x0102" class="edu.xmu.hwb.implement.AuthorizeProcess" singleton="false" >
+        <property name="storageManagerFilter" ref="storageprovide"/>
+    </bean>
+
+    <bean id="jt808CodecFactory" class="org.apache.mina.filter.codec.ProtocolCodecFilter" singleton="false">
+        <constructor-arg index="0" type="org.apache.mina.filter.codec.ProtocolEncoder">
+            <ref bean="jt808Encoder"/>
+        </constructor-arg>
+        <constructor-arg index="1" type="org.apache.mina.filter.codec.ProtocolDecoder">
+            <ref bean="jt808Decoder"/>
+        </constructor-arg>
+    </bean>
+    <bean id="jt808Encoder" class= "edu.xmu.hwb.codec.JT808Encoder" singleton="false"/>
+    <bean id="jt808Decoder" class= "edu.xmu.hwb.codec.JT808Decoder" singleton="false"/>
+
+    <bean id="executorFilter" class="org.apache.mina.filter.executor.ExecutorFilter" singleton="false" >
+        <constructor-arg >
+            <ref bean="orderedThreadPoolExecutor"/>
+        </constructor-arg>
+    </bean>
+
+    <bean id="orderedThreadPoolExecutor" class="org.apache.mina.filter.executor.OrderedThreadPoolExecutor"  singleton="false"/>
+
+
+
+    <!-- The filter chain. -->
+    <bean id="filterChainBuilder" class="org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder" singleton="false">
+        <property name="filters">
+            <map>
+                <entry key="codecFilter" value-ref="jt808CodecFactory"/>
+                <entry key="executorFilter" value-ref="executorFilter"/>
+                <entry key="loggingFilter" value-ref="loggingFilter"/>
+                <entry key="authFilter" value-ref="authFilter"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean id = "serverConfig" class="java.net.InetSocketAddress" >
+        <constructor-arg index="0" type="java.lang.String" value="127.0.0.1"/>
+        <constructor-arg index="1" type="int" value="8899"/>
+    </bean>
+    <!-- The IoAcceptor which binds to port 161 -->
+    <bean id="ioAcceptor" class="org.apache.mina.transport.socket.nio.NioSocketAcceptor" init-method="bind" destroy-method="unbind">
+        <property name="defaultLocalAddress" ref="serverConfig" />
+        <property name="handler"  ref="trapHandler" />
+        <property name="filterChainBuilder" ref="filterChainBuilder" />
+    </bean>
+
+
+    <bean id="dataSource"
+          class="com.mchange.v2.c3p0.ComboPooledDataSource" init-method="getConnection"
+          destroy-method="close">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/hwbtest?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;autoReconnect=true&amp;failOverReadOnly=false"></property>
+        <property name="user" value="gps_hwb"></property>
+        <property name="password" value="130319"></property>
+
+        <property name="initialPoolSize" value="1"></property>
+        <property name="minPoolSize" value="1"></property>
+        <property name="maxPoolSize" value="20"></property>
+        <property name="acquireIncrement" value="1"></property>
+        <property name="preferredTestQuery" value="select 1 from dual"></property>
+        <property name="acquireRetryAttempts" value="30"></property>
+        <property name="acquireRetryDelay" value="1000"></property>
+        <property name="idleConnectionTestPeriod" value="900"></property>
+    </bean>
+
+</beans>

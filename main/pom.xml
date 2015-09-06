@@ -1,0 +1,247 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>trackserver</artifactId>
+        <groupId>edu.xmu.hwb</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>main</artifactId>
+    <packaging>jar</packaging>
+
+    <name>main</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.mina</groupId>
+            <artifactId>mina-core</artifactId>
+            <version>2.0.7</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--数据库连接以及JDBC组件架包 start-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.25</version>
+        </dependency>
+        <dependency>
+            <groupId>c3p0</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.9.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>4.0.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>4.0.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>4.0.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>4.0.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.13</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.xmu.hwb</groupId>
+            <artifactId>core</artifactId>
+            <version>${project.version}</version>
+            <scope>system</scope>
+            <systemPath>D:/Herrfe/cloudpan/project/xmutserver/lib/core-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>edu.xmu.hwb</groupId>
+            <artifactId>protocol</artifactId>
+            <version>${project.version}</version>
+            <scope>system</scope>
+            <systemPath>D:/Herrfe/cloudpan/project/xmutserver/lib/protocol-1.0-SNAPSHOT.jar</systemPath>
+            <!-- <systemPath>${parent.basedir}/protocol/target/protocol-1.0-SNAPSHOT.jar</systemPath>-->
+        </dependency>
+        <dependency>
+            <groupId>edu.xmu.hwb</groupId>
+            <artifactId>c5-sdk</artifactId>
+            <version>${project.version}</version>
+            <scope>system</scope>
+            <systemPath>D:/Herrfe/cloudpan/project/xmutserver/lib/c5-sdk.jar</systemPath>
+            <!-- <systemPath>${parent.basedir}/protocol/target/protocol-1.0-SNAPSHOT.jar</systemPath>-->
+        </dependency>
+        <dependency>
+            <groupId>edu.xmu.hwb</groupId>
+            <artifactId>storage</artifactId>
+            <version>${project.version}</version>
+            <scope>system</scope>
+            <systemPath>D:/Herrfe/cloudpan/project/xmutserver/lib/storage-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 拷贝依赖包 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <excludeTransitive>false</excludeTransitive>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 将打包后生成的jar复制到指定路径 -->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-source</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${project.parent.basedir}/lib"
+                                      file="${project.build.directory}/${project.build.finalName}.${project.packaging}"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>edu.xmu.hwb.MainApp</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+<!--            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.0.6</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.proguard</groupId>
+                        <artifactId>proguard-base</artifactId>
+                        <version>4.9</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <proguardVersion>4.9</proguardVersion>
+                    <options>
+                        <option>-ignorewarnings</option> &lt;!&ndash;忽略所有告警&ndash;&gt;
+                        <option>-dontshrink</option>   &lt;!&ndash;不做 shrink &ndash;&gt;
+                        <option>-dontoptimize</option> &lt;!&ndash;不做 optimize &ndash;&gt;
+                        <option>-dontskipnonpubliclibraryclasses</option>
+                        <option>-dontskipnonpubliclibraryclassmembers</option>
+
+                        <option>-keepattributes Signature</option>  &lt;!&ndash;保持包注解类&ndash;&gt;
+
+                        <option>-keep public class edu.xmu.hwb.MainApp { public *; public static *; }</option>
+                        <option>-keep public class * extends  edu.xmu.hwb.process.Process  </option>
+                        <option>-keep public class * extends  org.apache.mina.core.service.IoHandlerAdapter  { public *; public static *; }  </option>
+                        <option>-keep public class * extends  edu.xmu.hwb.storage.AutoMsgStorage  { public *; public static *; } </option>
+                        <option>-keep public class * extends  edu.xmu.hwb.storage.StorageManagerFilter  { public *; public static *; } </option>
+                        <option>-keep public class * extends  org.apache.mina.core.filterchain.IoFilterAdapter  { public *; public static *; } </option>
+                    </options>
+                    <injar>${project.build.finalName}-jar-with-dependencies.jar</injar>
+                    <outjar>${project.build.finalName}-small.jar</outjar>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <libs>
+                        <lib>${java.home}/lib/rt.jar</lib>
+                        <lib>${java.home}/lib/jsse.jar</lib>
+                    </libs>
+                </configuration>
+            </plugin>-->
+
+        </plugins>
+    </build>
+</project>
